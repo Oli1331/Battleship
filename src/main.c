@@ -16,16 +16,13 @@
 #define CELL_CHECKED 3
 
 // Устройства ввода-вывода (16-битные порты)
-volatile unsigned short int* Rand_device = (volatile unsigned short int*)0xFF1A;
-volatile unsigned short int* Players_monitor_device = (volatile unsigned short int*)0xFF80;
-volatile unsigned short int* Bots_monitor_device = (volatile unsigned short int*)   0xFF00;
-volatile unsigned short int* Step_indicator_device = (volatile unsigned short int*) 0xFF18;
-volatile unsigned short int* Gun_device = (volatile unsigned short int*)        0b1111111100010110;
-volatile unsigned short int* Debug_line_device = (volatile unsigned short int*) 0b1111111100011110;
-volatile unsigned short int* Terminal_device = (volatile unsigned short int*)   0b1111111100100000;
-volatile unsigned short int* Reset_bots_monitor_device = (volatile unsigned short int*)     0b1111111100010100;
-volatile unsigned short int* Reset_players_monitor_device = (volatile unsigned short int*)  0b1111111110010100;
-short int status_debug_line;
+unsigned short int* volatile Rand_device = (unsigned short int* volatile)                   0xFF32;
+unsigned short int* volatile Players_monitor_device = (unsigned short int* volatile)        0xFF82;
+unsigned short int* volatile Bots_monitor_device = (unsigned short int* volatile)           0xFF02;
+unsigned short int* volatile Gun_device = (unsigned short int* volatile)                    0xff28;
+unsigned short int* volatile Terminal_device = (unsigned short int* volatile)               0xFF20;
+unsigned short int* volatile Reset_bots_monitor_device = (unsigned short int* volatile)     0xFF1E;
+unsigned short int* volatile Reset_players_monitor_device = (unsigned short int* volatile)  0xFF9E;
 
 // Состояние кораблей
 unsigned short int one_cell_ships[4];
@@ -35,8 +32,8 @@ unsigned short int four_cell_ship;
 unsigned short int* status_ships[4] = { one_cell_ships, two_cell_ships, three_cell_ships, &four_cell_ship };
 
 // игровые карты
-volatile unsigned char players_map[MAP_SIZE];
-volatile unsigned char bots_map[MAP_SIZE];
+unsigned char players_map[MAP_SIZE];
+unsigned char bots_map[MAP_SIZE];
 
 typedef enum { BOT_RANDOM, BOT_TARGETING } BotState;
 
@@ -46,7 +43,7 @@ void get_cord_from_player(unsigned char* x, unsigned char* y) {
     waiting();
     char cord = *Gun_device;
     *y = (cord & 0xf);
-    *x = 9 - ((cord & 0xf0) >> 4);
+    *x = ((cord & 0xf0) >> 4);
 }
 
 // static unsigned short int rng_state = 11;
@@ -72,8 +69,7 @@ void print_terminal(char* str) {
         str++;
     }
 }
-
-void make_frame(unsigned char x, unsigned char y, unsigned char o, unsigned char size_ship, volatile unsigned char* map, volatile unsigned short int* monitor) {
+void make_frame(unsigned char x, unsigned char y, unsigned char o, unsigned char size_ship, unsigned char* map, volatile unsigned short int* monitor) {
     y += SHIFT;
     x += SHIFT;
 
@@ -87,7 +83,6 @@ void make_frame(unsigned char x, unsigned char y, unsigned char o, unsigned char
             for (unsigned char i = x - 1; i <= x + 1; i++) {
                 if ((map[IDX(i, j)] & 0x7) == CELL_FRAME) {
                     map[IDX(i, j)] = CELL_CHECKED;
-                    // Вычитаем SHIFT из i, чтобы рамка не уехала вправо
                     frames[j] |= (0x0200 >> (i - SHIFT));
                 }
             }
@@ -98,24 +93,20 @@ void make_frame(unsigned char x, unsigned char y, unsigned char o, unsigned char
             for (unsigned char i = x - 1; i <= x + size_ship; i++) {
                 if ((map[IDX(i, j)] & 0x7) == CELL_FRAME) {
                     map[IDX(i, j)] = CELL_CHECKED;
-                    // Вычитаем SHIFT из i
                     frames[j] |= (0x0200 >> (i - SHIFT));
                 }
             }
         }
     }
-
-    // Вывод на монитор (итерируемся по 10 строкам железа)
+    // Вывод на монитор 
     for (unsigned char row = 0; row < SIZE; row++) {
-        // Железный row (0-9) соответствует строке карты row + SHIFT (1-10)
-        // Чтобы не дергать шину пустыми нулями, лучше добавить проверку
         if (frames[row + SHIFT] != 0) {
             *(monitor + row) = frames[row + SHIFT];
         }
     }
 }
 
-void save_ship(unsigned char x, unsigned char y, unsigned char o, unsigned char size_ship, volatile unsigned char* map, unsigned char ind, char draw) {
+void save_ship(unsigned char x, unsigned char y, unsigned char o, unsigned char size_ship, unsigned char* map, unsigned char ind, char draw) {
 
     y += SHIFT;
     x += SHIFT;
@@ -127,6 +118,10 @@ void save_ship(unsigned char x, unsigned char y, unsigned char o, unsigned char 
 
         for (unsigned char i = 0; i < size_ship; i++) {
             map[IDX(x, y + i)] = (ind << 6) | ((size_ship - 1) << 3) | CELL_SHIP;
+            // if (draw) {
+            //     *(Players_monitor_device + y + i) = 0x200 >> x;
+            //     *(Players_monitor_device + y + i) = 0x200 >> x;
+            // }
         }
     }
     else {
@@ -138,12 +133,17 @@ void save_ship(unsigned char x, unsigned char y, unsigned char o, unsigned char 
 
         for (unsigned char i = 0; i < size_ship; i++) {
             map[IDX(x + i, y)] = (ind << 6) | ((size_ship - 1) << 3) | CELL_SHIP;
+            // if (draw) {
+            //     *(Players_monitor_device + y) = 0x200 >> (x + i);
+            //     *(Players_monitor_device + y) = 0x200 >> (x + i);
+            // }
+
         }
     }
 
 }
 
-unsigned char check_rules(unsigned char x, unsigned char y, unsigned char o, unsigned char size_ship, volatile unsigned char* map) {
+unsigned char check_rules(unsigned char x, unsigned char y, unsigned char o, unsigned char size_ship, unsigned char* map) {
     if (o & 1) {
         if ((y + size_ship > SIZE)) return 0;
         y += SHIFT; x += SHIFT;
@@ -161,7 +161,7 @@ unsigned char check_rules(unsigned char x, unsigned char y, unsigned char o, uns
     return 1;
 }
 
-void random_map_of_bot(volatile unsigned char* map, unsigned char save_status) {
+void random_map(unsigned char* map, unsigned char save_status) {
     for (unsigned char ts = 4; ts >= 1; ts--) {
         for (unsigned char s = ts; s <= 4; s++) {
             unsigned char x, y, o;
@@ -179,14 +179,6 @@ void random_map_of_bot(volatile unsigned char* map, unsigned char save_status) {
     }
 }
 
-void get_cord_from_player(unsigned char* x, unsigned char* y);
-
-// void get_cord_from_player(unsigned char* x, unsigned char* y) {
-//     unsigned char data = *Gun_device;
-//     *x = data & 0xf;
-//     *y = data & 0xf0;
-// }
-
 void draw_on_monitor() {
     for (unsigned char y = 0; y < SIZE; y++) {
         unsigned short int row_mask = 0;
@@ -197,6 +189,7 @@ void draw_on_monitor() {
             }
         }
         if (row_mask != 0) {
+            *(Players_monitor_device + y) = row_mask;
             *(Players_monitor_device + y) = row_mask;
         }
     }
@@ -230,10 +223,11 @@ void print_cord_on_terminal(unsigned char x, unsigned char y) {
 
 
 int main() {
-    print_terminal("Loading...\n");
-    random_map_of_bot(players_map, 0);
+    print_terminal("Generate player's sheep\n");
+    random_map(players_map, 0);
     draw_on_monitor();
-    random_map_of_bot(bots_map, 1);
+    print_terminal("Generate bot's sheep\n");
+    random_map(bots_map, 1);
     //debug_draw_on_monitor();
 
     unsigned char cnt_players_ship = 10;
@@ -244,18 +238,16 @@ int main() {
     unsigned char bot_first_hit_x = 0, bot_first_hit_y = 0;
     unsigned char bot_hits_count = 0, bot_ship_length = 0;
     signed char bot_dir_x = 0, bot_dir_y = 0;
+    print_terminal("\n### START ###\n");
 
     while (cnt_players_ship && cnt_bots_ship) {
 
         // --- ХОД ИГРОКА ---
-        *Step_indicator_device = 1;
         print_terminal("\n--- PLAYER'S TURN ---\n");
 
         unsigned char player_turn = 1;
         while (player_turn && cnt_bots_ship > 0) {
             unsigned char px, py;
-            *Debug_line_device = status_debug_line | 1 << 15;
-            status_debug_line = 0;
 
             get_cord_from_player(&px, &py);
             print_cord_on_terminal(px, py);
@@ -264,11 +256,11 @@ int main() {
 
             unsigned char map_idx = IDX(px + SHIFT, py + SHIFT);
             unsigned char cell = bots_map[map_idx];
-            *Debug_line_device = 1;
             if ((cell & 0x07) == CELL_SHIP) {
                 // Игрок попал
                 print_terminal("Hit!\n");
 
+                DRAW_PIXEL(Bots_monitor_device, px, py);
                 DRAW_PIXEL(Bots_monitor_device, px, py);
                 DRAW_PIXEL(Bots_monitor_device, px, py);
 
@@ -278,13 +270,11 @@ int main() {
                 status_ships[type][ind] -= (1 << 9);
                 unsigned short int status = status_ships[type][ind];
 
-                status_debug_line |= 7 << 4;
 
                 if (((status & (0b1111 << 9))) == 0) {
                     print_terminal("*sank*\n");
                     make_frame(status & 0x0F, (status >> 4) & 0x0F, (status >> 8) & 1, type + 1, bots_map, Bots_monitor_device);
                     cnt_bots_ship--;
-                    status_debug_line |= 1 << 3;
 
                 }
             }
@@ -293,20 +283,16 @@ int main() {
                 print_terminal("Miss\n");
                 DRAW_PIXEL(Bots_monitor_device, px, py);
                 player_turn = 0;
-                status_debug_line = 0b101 << 1;
             }
             else {
                 print_terminal("no sense\n");
             }
             bots_map[map_idx] = CELL_CHECKED;
-            status_debug_line = 0b1111111111 << 3;
         }
 
         if (cnt_bots_ship == 0) break;
 
         // --- ХОД БОТА ---
-        *Step_indicator_device = 0;
-        *Debug_line_device = 0b0101010101010101;
         unsigned char bot_turn = 1;
         print_terminal("\n---THE BOT'S MOVE---\n");
 
