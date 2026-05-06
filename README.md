@@ -4,14 +4,10 @@ A complete hardware-software implementation of the classic "Battleship" game, bu
 
 
 **GIF of gameplay**
-![Gif gameplay](images/Logisim_BattleShip.gif)
-
+![Gif gameplay](images/low_gif_logisim.gif)
 
 **Figure 1:** General overview of the Logisim circuit.
 ![General overview of the Logisim circuit](images/main.png)
-
-**Figure 2:** The custom display controller utilizing logic error states for color generation.
-![ The custom display controlle](images/bot_monitor.png)
 
 ## Project Overview
 
