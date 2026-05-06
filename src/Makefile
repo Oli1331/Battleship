@@ -4,5 +4,5 @@ bin.img:main.asm start.asm
 	cocas --target cdm16 --output bin.img --debug bin.dbg.json main.asm start.asm 
 
 main.asm:main.c
-	clang main.c -DDEBUG=0 -O3 -S -o main.asm -fno-builtin-memset
+	clang main.c -DDEBUG=0 -O3 -S -o main.asm -fno-builtin-memset -Wall -Wextra -Werror
 	

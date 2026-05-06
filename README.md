@@ -2,9 +2,13 @@
 
 A complete hardware-software implementation of the classic "Battleship" game, built from scratch within the Logisim digital logic simulator. The project runs on the 16-bit educational processor CdM-16, featuring custom-designed peripheral devices, memory-mapped I/O, and an AI opponent written in C.
 
+<div style="display: flex; justify-content: center;">
+   <p>GIF of gameplay</p>
+</div>
 
-**GIF of gameplay**
-![Gif gameplay](images/low_gif_logisim.gif)
+<div style="display: flex; justify-content: center;">
+  <img src="images/low_gif_logisim.gif" alt="Gif gameplay" width="300">
+</div>
 
 **Figure 1:** General overview of the Logisim circuit.
 ![General overview of the Logisim circuit](images/main.png)

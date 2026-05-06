@@ -880,7 +880,7 @@ random_map>                                     # -- Begin function random_map
 	tst	r4
 	beq	.LBB6_28
 	br	.LBB6_20
-.LBB6_28:                                       # %if.else.i74
+.LBB6_28:                                       # %if.else.i73
                                                 #   in Loop: Header=BB6_3 Depth=2
 	inc	r5
 	cmp	r5, r2
@@ -960,7 +960,7 @@ random_map>                                     # -- Begin function random_map
 	cmp	r6, r5
 	bhi	.LBB6_35
 	br	.LBB6_36
-.LBB6_20:                                       # %if.then.i65
+.LBB6_20:                                       # %if.then.i64
                                                 #   in Loop: Header=BB6_3 Depth=2
 	add	r3, r5, r3
 	ssw	r3, -12                                 # 2-byte Folded Spill
@@ -977,11 +977,11 @@ random_map>                                     # -- Begin function random_map
 	cmp	r4, r2
 	blo	.LBB6_23
 	br	.LBB6_22
-.LBB6_22:                                       # %for.body.i66.preheader
+.LBB6_22:                                       # %for.body.i65.preheader
                                                 #   in Loop: Header=BB6_3 Depth=2
 	lsw	r3, -16                                 # 2-byte Folded Reload
 	br	.LBB6_24
-.LBB6_24:                                       # %for.body.i66
+.LBB6_24:                                       # %for.body.i65
                                                 #   Parent Loop BB6_1 Depth=1
                                                 #     Parent Loop BB6_3 Depth=2
                                                 # =>    This Loop Header: Depth=3

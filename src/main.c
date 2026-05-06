@@ -106,7 +106,7 @@ void make_frame(unsigned char x, unsigned char y, unsigned char o, unsigned char
     }
 }
 
-void save_ship(unsigned char x, unsigned char y, unsigned char o, unsigned char size_ship, unsigned char* map, unsigned char ind, char draw) {
+void save_ship(unsigned char x, unsigned char y, unsigned char o, unsigned char size_ship, unsigned char* map, unsigned char ind) {
 
     y += SHIFT;
     x += SHIFT;
@@ -118,10 +118,6 @@ void save_ship(unsigned char x, unsigned char y, unsigned char o, unsigned char 
 
         for (unsigned char i = 0; i < size_ship; i++) {
             map[IDX(x, y + i)] = (ind << 6) | ((size_ship - 1) << 3) | CELL_SHIP;
-            // if (draw) {
-            //     *(Players_monitor_device + y + i) = 0x200 >> x;
-            //     *(Players_monitor_device + y + i) = 0x200 >> x;
-            // }
         }
     }
     else {
@@ -133,11 +129,6 @@ void save_ship(unsigned char x, unsigned char y, unsigned char o, unsigned char 
 
         for (unsigned char i = 0; i < size_ship; i++) {
             map[IDX(x + i, y)] = (ind << 6) | ((size_ship - 1) << 3) | CELL_SHIP;
-            // if (draw) {
-            //     *(Players_monitor_device + y) = 0x200 >> (x + i);
-            //     *(Players_monitor_device + y) = 0x200 >> (x + i);
-            // }
-
         }
     }
 
@@ -171,7 +162,7 @@ void random_map(unsigned char* map, unsigned char save_status) {
                 o = (unsigned char)(fast_rand_10() & 1);
             } while (!check_rules(x, y, o, ts, map));
 
-            save_ship(x, y, o, ts, map, s - ts, save_status);
+            save_ship(x, y, o, ts, map, s - ts);
             if (save_status) {
                 status_ships[ts - 1][s - ts] = ((ts) << 9) | (o << 8) | (y << 4) | x;
             }
