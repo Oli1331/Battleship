@@ -82,8 +82,9 @@ void make_frame(unsigned char x, unsigned char y, unsigned char o, unsigned char
         for (unsigned char j = y - 1; j <= y + size_ship; j++) {
             for (unsigned char i = x - 1; i <= x + 1; i++) {
                 if ((map[IDX(i, j)] & 0x7) == CELL_FRAME) {
-                    map[IDX(i, j)] = CELL_CHECKED;
-                    frames[j] |= (0x0200 >> (i - SHIFT));
+                    map[IDX(i, j)] = CELL_CHECKED;  
+                    if (i >= SHIFT && i < SIZE + SHIFT)
+                        frames[j] |= (0x0200 >> (i - SHIFT));
                 }
             }
         }
@@ -93,7 +94,8 @@ void make_frame(unsigned char x, unsigned char y, unsigned char o, unsigned char
             for (unsigned char i = x - 1; i <= x + size_ship; i++) {
                 if ((map[IDX(i, j)] & 0x7) == CELL_FRAME) {
                     map[IDX(i, j)] = CELL_CHECKED;
-                    frames[j] |= (0x0200 >> (i - SHIFT));
+                    if (i >= SHIFT && i < SIZE + SHIFT)
+                        frames[j] |= (0x0200 >> (i - SHIFT));
                 }
             }
         }
@@ -107,7 +109,6 @@ void make_frame(unsigned char x, unsigned char y, unsigned char o, unsigned char
 }
 
 void save_ship(unsigned char x, unsigned char y, unsigned char o, unsigned char size_ship, unsigned char* map, unsigned char ind) {
-
     y += SHIFT;
     x += SHIFT;
     if (o & 1) {
@@ -121,7 +122,6 @@ void save_ship(unsigned char x, unsigned char y, unsigned char o, unsigned char 
         }
     }
     else {
-
         // Горизонтально
         for (unsigned char j = y - 1; j <= y + 1; j++)
             for (unsigned char i = x - 1; i <= x + size_ship; i++)
@@ -131,7 +131,6 @@ void save_ship(unsigned char x, unsigned char y, unsigned char o, unsigned char 
             map[IDX(x + i, y)] = (ind << 6) | ((size_ship - 1) << 3) | CELL_SHIP;
         }
     }
-
 }
 
 unsigned char check_rules(unsigned char x, unsigned char y, unsigned char o, unsigned char size_ship, unsigned char* map) {
@@ -316,7 +315,8 @@ int main() {
                     bx = bot_target_x + bot_dir_x;
                     by = bot_target_y + bot_dir_y;
 
-                    if (players_map[IDX(bx, by)] == CELL_CHECKED || bx < SHIFT || by < SHIFT || bx > SIZE || by > SIZE) {
+                    if (players_map[IDX(bx, by)] == CELL_CHECKED
+                        || bx < SHIFT || by < SHIFT || bx > SIZE || by > SIZE) {
                         bot_dir_x = -bot_dir_x;
                         bot_dir_y = -bot_dir_y;
                         bot_target_x = bot_first_hit_x;
